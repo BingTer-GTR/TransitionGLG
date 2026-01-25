@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Transition</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#000,#434343,#000);color:#fff;height:100vh;overflow-y:auto}
+        .brand-title{position:absolute;top:15px;left:20px;font-size:32px;font-weight:bold;z-index:20}
+        #navbar{position:fixed;top:0;width:100%;background:rgba(34,34,34,.9);display:flex;justify-content:center;z-index:15;padding-left:150px}
+        #navbar button{background:none;border:none;color:#fff;padding:15px 25px;font-size:18px;cursor:pointer;transition:.3s}
+        #navbar button:hover{background:rgba(255,255,255,.1)}
+        #navbar button.active{background:#007BFF}
+        .maker-info{position:absolute;right:20px;top:50%;transform:translateY(-50%);color:#aaa;font-size:12px;z-index:20}
+        #content{display:flex;flex-direction:column;align-items:center;padding:100px 20px 50px;text-align:center}
+        h1{font-size:48px;margin-bottom:20px}
+        .download-container{display:flex;flex-direction:column;align-items:center;gap:30px;margin:20px 0}
+        .version-selector{position:relative;display:flex;align-items:center;gap:15px}
+        .download-btn{padding:15px 35px;font-size:20px;color:#fff;background:linear-gradient(45deg,#007BFF,#0056b3);border:none;border-radius:8px;cursor:pointer;min-width:160px}
+        .dropdown-btn{background:rgba(68,68,68,.8);color:#fff;border:none;padding:15px;border-radius:8px;cursor:pointer;font-size:18px}
+        .dropdown-list{display:none;position:absolute;top:100%;left:-50px;background:rgba(51,51,51,.95);min-width:200px;border-radius:8px;z-index:1;padding:10px 0}
+        .dropdown-list.show{display:block}
+        .dropdown-item{padding:12px 20px;cursor:pointer;color:#fff;transition:.2s}
+        .dropdown-item:hover{background:rgba(85,85,85,.7)}
+        .dropdown-item.selected{background:#007BFF}
+        .version-display{font-size:18px;color:#ccc;margin-top:10px}
+        .log-table{width:80%;max-width:700px;border-collapse:collapse;margin:30px 0;background:rgba(34,34,34,.8);border-radius:8px;overflow:hidden}
+        .log-table th,.log-table td{padding:20px 30px;text-align:left;border-bottom:1px solid rgba(68,68,68,.5)}
+        .log-table th{background:linear-gradient(45deg,#007BFF,#0056b3);font-weight:bold}
+        .log-table tr:last-child td{border-bottom:none}
+        .loading{display:none;color:#007BFF;margin-top:10px}
+    </style>
+</head>
+<body>
+    <div class="brand-title">Transition</div>
+    <div class="makre-info">冰龙宝宝冰特制作</div>
+    <div id="navbar">
+        <button id="welcomeBtn" class="active" onclick="showPage('welcome')">Welcome</button>
+        <button id="downloadsBtn" onclick="showPage('downloads')">Downloads</button>
+        <button id="logBtn" onclick="showPage('log')">Log</button>
+    </div>
+    
+    <div id="content">
+        <div id="page-welcome">
+            <h1>欢迎游玩Transition!</h1>
+        </div>
+        
+        <div id="page-downloads" style="display:none">
+            <div class="download-container">
+                <h2>选择游戏版本</h2>
+                <div class="version-selector">
+                    <button id="downloadBtn" class="download-btn" onclick="startDownload()">Download</button>
+                    <button class="dropdown-btn" onclick="toggleDropdown()">▼</button>
+                    <div id="versionDropdown" class="dropdown-list">
+                        <div class="dropdown-item selected" onclick="selectVersion(this,'1.0')">Version 1.0</div>
+                        <div class="dropdown-item" onclick="selectVersion(this,'1.0.1')">Version 1.0.1</div>
+                        <div class="dropdown-item" onclick="selectVersion(this,'1.0.2')">Version 1.0.2</div>
+                        <div class="dropdown-item" onclick="selectVersion(this,'1.0.3')">Version 1.0.3</div>
+                        <div class="dropdown-item" onclick="selectVersion(this,'1.0.4')">Version 1.0.4</div>
+                    </div>
+                </div>
+                <div id="versionDisplay" class="version-display">Selected: Version 1.0</div>
+                <div id="loading" class="loading">⏳ Preparing to download...</div>
+            </div>
+        </div>
+        
+        <div id="page-log" style="display:none">
+            <h2>版本更新日志</h2>
+            <table class="log-table">
+                <thead>
+                    <tr>
+                        <th>版本号</th>
+                        <th>发布日期</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>V1.0</td><td>2025年12月25日</td></tr>
+                    <tr><td>V1.0.1</td><td>2025年12月26日</td></tr>
+                    <tr><td>V1.0.2</td><td>2025年12月28日</td></tr>
+                    <tr><td>V1.0.3</td><td>2025年12月30日</td></tr>
+                    <tr><td>V1.0.4</td><td>2026年1月17日</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let selectedVersion = '1.0';
+        
+        // 文件映射 - 请替换为实际文件名
+        const fileMap = {
+            '1.0': 'Transition1.0.zip',
+            '1.0.1': 'Transition1.0.1.zip',
+            '1.0.2': 'Transition1.0.2.zip',
+            '1.0.3': 'Transition1.0.3.zip',
+            '1.0.4': 'Transition1.0.4.zip'
+        };
+
+        function showPage(p){
+            ['welcome','downloads','log'].forEach(id=>{
+                document.getElementById('page-'+id).style.display=id===p?'block':'none'
+            });
+            document.querySelectorAll('#navbar button').forEach(b=>b.classList.remove('active'));
+            document.getElementById(p+'Btn').classList.add('active')
+        }
+        
+        function toggleDropdown(){
+            document.getElementById('versionDropdown').classList.toggle('show')
+        }
+        
+        function selectVersion(el,v){
+            document.querySelectorAll('.dropdown-item').forEach(i=>i.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedVersion=v;
+            document.getElementById('versionDisplay').textContent='已选择: Version '+v;
+            document.getElementById('versionDropdown').classList.remove('show')
+        }
+        
+        function startDownload(){
+            const downloadBtn = document.getElementById('downloadBtn');
+            const loading = document.getElementById('loading');
+            
+            downloadBtn.disabled = true;
+            loading.style.display = 'block';
+            
+            const fileName = fileMap[selectedVersion];
+            
+            if(!fileName){
+                alert('文件不存在！');
+                downloadBtn.disabled = false;
+                loading.style.display = 'none';
+                return;
+            }
+            
+            setTimeout(()=>{
+                try{
+                    const link = document.createElement('a');
+                    link.href = fileName;
+                    link.download = fileName;
+                    link.style.display = 'none';
+                    
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    loading.textContent = '✅ Downloading...';
+                    
+                    setTimeout(()=>{
+                        downloadBtn.disabled = false;
+                        loading.style.display = 'none';
+                        loading.textContent = '⏳ Preparing to download...';
+                    },2000);
+                }catch(error){
+                    alert('Download failed');
+                    downloadBtn.disabled = false;
+                    loading.style.display = 'none';
+                }
+            },500);
+        }
+        
+        window.onclick=e=>{
+            if(!e.target.matches('.dropdown-btn'))
+                document.getElementById('versionDropdown').classList.remove('show')
+        }
+    </script>
+</body>
+</html>
